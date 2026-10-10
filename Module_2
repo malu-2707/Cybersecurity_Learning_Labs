@@ -1,0 +1,710 @@
+# Module 2 — Linux, Security Tools & Reconnaissance
+
+**Duration:** Day 6–Day 10
+**Environment:** Kali Linux running in a virtual machine
+**Purpose:** Develop Linux security skills, understand reconnaissance, learn network enumeration, inspect traffic, and document findings from authorized security labs.
+---
+
+# Day 6 — Linux Fundamentals and Security
+
+## 1. Learning objectives
+
+* Understand the Linux file system.
+* Inspect users, groups, and file permissions.
+* Understand processes and services.
+* Learn how Linux permissions affect security.
+* Practise basic Linux administration commands.
+
+## 2. Important Linux concepts
+
+**File system:** Linux organizes files and directories under a single root directory, `/`.
+
+**User:** An account used to access and operate the system.
+
+**Group:** A collection of users that can share access permissions.
+
+**File permissions:** Rules that control who can read, write, or execute a file.
+
+**Process:** A running instance of a program.
+
+**Service:** A background program that provides a function, such as networking, logging, or security monitoring.
+
+**Least privilege:** Users and applications should have only the permissions required to perform their tasks.
+
+## 3. Important Linux directories
+
+| Directory    | Purpose                              |
+| ------------ | ------------------------------------ |
+| `/home`      | Home directories for regular users   |
+| `/etc`       | System and application configuration |
+| `/var/log`   | System and application logs          |
+| `/usr/bin`   | Common executable programs           |
+| `/tmp`       | Temporary files                      |
+| `/var/ossec` | Wazuh-related files in this lab      |
+
+## 4. Practical lab: Identify the current user and directory
+
+**Command:**
+
+```bash
+pwd
+```
+
+**My observed output:**
+
+```text
+/home/malu
+```
+
+**Meaning:** My current working directory is `/home/malu`.
+
+**Command:**
+
+```bash
+whoami
+```
+
+**My observed output:**
+
+```text
+malu
+```
+
+**Meaning:** I am using the regular Linux account `malu`.
+
+## 5. Practical lab: Inspect file permissions
+
+**Command:**
+
+```bash
+ls -l /etc/passwd
+```
+
+**My observed output:**
+
+```text
+-rw-r--r-- 1 root root 3743 Oct 6 19:28 /etc/passwd
+```
+
+**Interpretation:**
+
+* Owner: `root`
+* Group: `root`
+* Owner permissions: read and write
+* Group permissions: read
+* Other-user permissions: read
+
+The permission string `-rw-r--r--` indicates that the file is readable by other users but writable only by its owner, root.
+
+The `/etc/passwd` file contains account information; password hashes are normally stored separately in `/etc/shadow`.
+
+## 6. Practical lab: Inspect user and group information
+
+**Commands to run:**
+
+```bash
+id
+groups
+```
+
+**Purpose:**
+
+* `id` displays the current user's UID, primary GID, and group memberships.
+* `groups` displays the groups associated with the current user.
+
+**My observed result:** Not yet recorded for this module.
+
+**Record after running:**
+
+* User ID (UID):
+* Primary group:
+* Additional groups:
+
+## 7. Practical lab: Inspect running processes
+
+**Command:**
+
+```bash
+ps aux | head
+```
+
+**My observation:** The output showed running processes, including system initialization and kernel-related processes.
+
+**Interpretation:**
+
+* `ps` displays process information.
+* `a` includes processes associated with terminals.
+* `u` displays user-oriented details.
+* `x` includes processes without a controlling terminal.
+* `head` displays the first lines of the output.
+
+This command provides a quick overview of running processes. The presence of a process alone does not prove that it is malicious.
+
+## 8. Practical lab: Inspect a system service
+
+**Command:**
+
+```bash
+sudo systemctl status wazuh-agent --no-pager
+```
+
+**My observed result:**
+
+```text
+Active: active (running)
+```
+
+The Wazuh agent process was identified as `wazuh-agentd`, PID `1185`, during the earlier inspection.
+
+**Interpretation:** The Wazuh agent was running locally. However, the earlier investigation showed that it could not establish a connection to its configured manager.
+
+This demonstrates that a service can be running while its network communication is failing.
+
+## 9. Day 6 summary
+
+I identified my Linux user and working directory, inspected the permissions of `/etc/passwd`, reviewed running processes, and checked the Wazuh agent service.
+
+I learned that Linux permissions control access to files and that a running process or service is not necessarily functioning correctly in every respect.
+
+**Status:** Basic Linux inspection practised; additional user and group results still need recording.
+
+---
+
+# Day 7 — Reconnaissance Fundamentals and DNS
+
+## 1. Learning objectives
+
+* Understand the purpose of reconnaissance.
+* Distinguish passive reconnaissance from active reconnaissance.
+* Understand common DNS record types.
+* Practise DNS lookups.
+* Understand authorization and scope.
+
+## 2. What is reconnaissance?
+
+Reconnaissance is the process of collecting information about a system, domain, network, or application before conducting further security assessment.
+
+### Passive reconnaissance
+
+Collecting information without directly probing the target's systems.
+
+Examples:
+
+* Reading publicly available documentation.
+* Reviewing public domain registration information.
+* Examining publicly available websites and security policies.
+
+### Active reconnaissance
+
+Directly interacting with a target to collect information.
+
+Examples:
+
+* Making DNS queries.
+* Checking whether an authorized host responds.
+* Scanning an authorized lab machine for exposed ports.
+
+Active testing must remain within the agreed scope and authorization.
+
+## 3. Important DNS record types
+
+| Record | Purpose                                                          |
+| ------ | ---------------------------------------------------------------- |
+| `A`    | Maps a domain name to an IPv4 address                            |
+| `AAAA` | Maps a domain name to an IPv6 address                            |
+| `MX`   | Identifies mail servers for a domain                             |
+| `NS`   | Identifies authoritative name servers                            |
+| `TXT`  | Stores text information, often including email-security policies |
+
+## 4. Practical lab: Look up a domain
+
+**Command:**
+
+```bash
+nslookup google.com
+```
+
+**My previously observed results:**
+
+* DNS server: `172.31.64.1`
+* IPv4 address: `142.251.221.110`
+* IPv6 address: `2404:6800:4007:836::200e`
+
+The response also contained:
+
+```text
+Got recursion not available from 172.31.64.1
+```
+
+**Interpretation:** The lookup returned DNS records despite the recursion warning. This is an earlier observation from Module 1, not a newly completed Day 7 lab.
+
+## 5. Practical lab: Query specific DNS record types
+
+**Commands to run:**
+
+```bash
+dig google.com A
+dig google.com AAAA
+dig google.com MX
+dig google.com NS
+dig google.com TXT
+```
+
+If `dig` is unavailable, try:
+
+```bash
+nslookup -type=MX google.com
+nslookup -type=NS google.com
+nslookup -type=TXT google.com
+```
+
+**Purpose:** These commands request different types of DNS records. Responses can vary over time and by DNS resolver.
+
+**My results:** Pending execution and recording.
+
+### Results table
+
+| Record type | Observed result |
+| ----------- | --------------- |
+| A           | Pending         |
+| AAAA        | Pending         |
+| MX          | Pending         |
+| NS          | Pending         |
+| TXT         | Pending         |
+
+## 6. Reconnaissance safety
+
+Before active testing, confirm:
+
+* The target is owned by me or explicitly authorized for testing.
+* The target IP address or domain is within scope.
+* The permitted tools and test types are understood.
+* The collected information does not unnecessarily expose sensitive data.
+
+A public domain's availability does not automatically grant permission to scan its infrastructure.
+
+## 7. Day 7 summary
+
+I learned the difference between passive and active reconnaissance and reviewed common DNS record types. My earlier `nslookup` results confirmed that a domain could resolve to IPv4 and IPv6 addresses.
+
+The additional DNS record queries still need to be executed and documented.
+
+**Status:** Concepts reviewed; additional practical results pending.
+
+---
+
+# Day 8 — Network Enumeration with Nmap
+
+## 1. Learning objectives
+
+* Understand hosts, ports, and services.
+* Learn the purpose of Nmap.
+* Distinguish open, closed, and filtered ports.
+* Perform a basic scan against a permitted lab target.
+* Document results without assuming that a scan proves a vulnerability.
+
+## 2. What is Nmap?
+
+Nmap is a network exploration and security auditing tool. It can identify reachable hosts, discover ports, and report information about services, depending on the scan and target configuration.
+
+### Port states
+
+**Open:** An application is accepting connections or responding on the port.
+
+**Closed:** The host is reachable, but no application is listening on that port at the time of the scan.
+
+**Filtered:** Nmap cannot determine the port state reliably because packet filtering or another network condition prevents a clear response.
+
+A port being open does not, by itself, mean the service is vulnerable.
+
+## 3. Practical lab: Check whether Nmap is installed
+
+**Command:**
+
+```bash
+nmap --version
+```
+
+If Nmap is not installed, check first:
+
+```bash
+command -v nmap
+```
+
+**Purpose:** Confirm that the command is available before starting the lab.
+
+**My result:** Pending execution.
+
+## 4. Practical lab: Scan the local machine
+
+This first scan targets the Kali VM itself, rather than another system.
+
+**Command:**
+
+```bash
+nmap 127.0.0.1
+```
+
+**Purpose:** Check common TCP ports on the local loopback interface.
+
+**My observed results:** Pending execution.
+
+**Record the results:**
+
+* Scan target: `127.0.0.1`
+* Command used: `nmap 127.0.0.1`
+* Open ports:
+* Reported services:
+* Date and time:
+* Notes:
+
+The earlier socket inspection found PostgreSQL listening on TCP port `5432` and Ollama listening on TCP port `11434`, both on loopback addresses. Whether Nmap reports those ports depends on the scan behavior and the state of the services when the scan runs.
+
+## 5. Practical lab: Inspect a specific local port
+
+**Command:**
+
+```bash
+nmap -p 5432,11434 127.0.0.1
+```
+
+**Purpose:** Check the two ports identified during the earlier local socket inspection.
+
+**My observed results:** Pending execution.
+
+**Interpretation guidance:**
+
+* If a port is reported as open, a service is responding as open during the scan.
+* If a port is closed, no listening application was detected on that port during the scan.
+* If a port is filtered, the scan could not establish the state reliably.
+
+## 6. Practical lab: Compare scan results with listening sockets
+
+**Command:**
+
+```bash
+sudo ss -tulpn
+```
+
+Compare the Nmap results with the socket information.
+
+Earlier observations showed:
+
+| Process    |      Port | Binding               |
+| ---------- | --------: | --------------------- |
+| PostgreSQL |  TCP 5432 | `127.0.0.1` and `::1` |
+| Ollama     | TCP 11434 | `127.0.0.1`           |
+
+**Important:** These are previously observed results. Run the command again if you want a direct comparison with the Nmap scan, since service state can change.
+
+## 7. Scope and safety
+
+* Scan only your own machine or a system for which you have explicit permission.
+* Do not scan public or shared infrastructure without authorization.
+* Start with a small, clearly defined scope.
+* Keep the command and its output as evidence.
+* Do not label a service vulnerable solely because a port is open.
+
+## 8. Day 8 summary
+
+I learned the purpose of Nmap and the meaning of common port states. The planned practical exercise checks the local Kali VM and compares scan findings with socket information.
+
+**Status:** Lab commands prepared; actual Nmap output pending.
+
+---
+
+# Day 9 — Wireshark, Burp Suite, and OWASP ZAP
+
+## 1. Learning objectives
+
+* Understand packet capture and network traffic analysis.
+* Learn the structure of HTTP requests and responses.
+* Understand the purpose of an intercepting proxy.
+* Identify DNS queries and TCP connections in captured traffic.
+* Practise safely with a controlled lab application.
+
+## 2. What is Wireshark?
+
+Wireshark is a network protocol analyzer that captures and displays packets from a selected interface or from an existing capture file.
+
+It can help identify:
+
+* Source and destination addresses.
+* Source and destination ports.
+* Protocols such as DNS, TCP, and HTTP.
+* TCP connection behavior.
+* Timing and packet-exchange patterns.
+
+Encrypted HTTPS application data is generally not readable as ordinary HTTP content from a standard packet capture alone.
+
+## 3. Practical lab: Check whether Wireshark is available
+
+**Command:**
+
+```bash
+wireshark --version
+```
+
+If the command is unavailable, check:
+
+```bash
+command -v wireshark
+```
+
+**My result:** Pending execution.
+
+## 4. Practical lab: Identify network interfaces
+
+**Command:**
+
+```bash
+ip addr
+```
+
+**Previously observed interface:**
+
+* Interface: `eth0`
+* IPv4 address: `172.31.68.46/20`
+
+The loopback interface uses `127.0.0.1` for IPv4.
+
+**Purpose:** Identify the interface to inspect when capturing traffic. The appropriate interface depends on where the traffic is travelling.
+
+## 5. Practical lab: Capture and inspect traffic
+
+Using Wireshark's graphical interface:
+
+1. Open Wireshark.
+2. Select the appropriate interface for your own lab traffic.
+3. Start a capture.
+4. Generate a small amount of permitted traffic from the Kali VM.
+5. Stop the capture.
+6. Inspect DNS or TCP packets.
+
+Example display filters:
+
+```text
+dns
+```
+
+```text
+tcp
+```
+
+```text
+ip.addr == 172.31.68.46
+```
+
+These are Wireshark display filters. They filter the packets shown in the interface; they do not restrict what the capture initially collects.
+
+**My observed results:** Pending capture.
+
+## 6. What are Burp Suite and OWASP ZAP?
+
+**Burp Suite:** A web security testing platform with an intercepting proxy used to inspect and test HTTP/S traffic in a controlled environment.
+
+**OWASP ZAP:** An open-source web application security testing tool that can inspect web requests and responses and assist with authorized testing.
+
+Both tools should be used with applications you own or have permission to assess.
+
+## 7. HTTP request and response concepts
+
+An HTTP request can contain:
+
+* A method, such as `GET` or `POST`.
+* A path or URL.
+* Headers.
+* Optional body data.
+
+An HTTP response can contain:
+
+* A status code.
+* Response headers.
+* Optional body content.
+
+Common status codes include:
+
+| Status code    | General meaning             |
+| -------------- | --------------------------- |
+| `200`          | Request succeeded           |
+| `301` or `302` | Redirect                    |
+| `400`          | Bad request                 |
+| `403`          | Forbidden                   |
+| `404`          | Resource not found          |
+| `500`          | Server encountered an error |
+
+The meaning of a response depends on the application and request context.
+
+## 8. Day 9 summary
+
+I learned the roles of Wireshark, Burp Suite, and OWASP ZAP and reviewed basic network and HTTP concepts. The capture and proxy exercises still require execution in a controlled lab.
+
+**Status:** Concepts documented; tool checks and traffic inspection pending.
+
+---
+
+# Day 10 — Controlled Reconnaissance Lab and Reporting
+
+## 1. Learning objectives
+
+* Combine Linux, DNS, and network enumeration skills.
+* Follow a defined and authorized scope.
+* Preserve accurate command output.
+* Distinguish observations from assumptions.
+* Write a concise technical report.
+
+## 2. Lab scope
+
+**Lab title:** Basic Reconnaissance and Network Inspection
+
+**Environment:** Kali Linux virtual machine
+
+**Authorized initial target:** The local Kali machine at `127.0.0.1`
+
+**Scope:** Basic local port inspection and DNS lookups. Additional targets may be included only when explicitly authorized.
+
+**Purpose:** Practise the reconnaissance workflow and record evidence from actual commands.
+
+## 3. Lab workflow
+
+### Step 1 — Record the environment
+
+```bash
+cat /etc/os-release
+whoami
+ip addr
+```
+
+Previously observed facts:
+
+* Operating system: Kali GNU/Linux Rolling
+* Version: `2026.3`
+* Username: `malu`
+* Network interface: `eth0`
+* IPv4 address: `172.31.68.46/20`
+
+These values come from earlier lab observations and should be rechecked if the environment has changed.
+
+### Step 2 — Gather DNS information
+
+```bash
+nslookup google.com
+```
+
+Previously observed IPv4 result:
+
+```text
+142.251.221.110
+```
+
+This is a prior observation, not a guarantee of the domain's current DNS answer.
+
+### Step 3 — Inspect local services
+
+```bash
+sudo ss -tulpn
+```
+
+Previously observed local services included PostgreSQL on TCP port `5432` and Ollama on TCP port `11434`.
+
+### Step 4 — Perform local port enumeration
+
+```bash
+nmap 127.0.0.1
+```
+
+Record the actual output after executing the scan.
+
+### Step 5 — Capture relevant lab traffic
+
+Use Wireshark to capture permitted traffic generated by the Kali VM. Record the interface, filter, protocols observed, and any limitations.
+
+### Step 6 — Document findings
+
+Separate the report into:
+
+* Confirmed observations.
+* Interpretations supported by evidence.
+* Unknowns or limitations.
+* Recommended next steps.
+
+### Step 7 — Clean up
+
+Stop any captures and testing tools, save only the evidence needed for the lab, and restore any temporary settings that were changed.
+
+## 4. Lab report template
+
+### Objective
+
+Practise basic Linux inspection, DNS lookup, and local network enumeration in a controlled environment.
+
+### Scope
+
+Kali Linux virtual machine and local loopback target `127.0.0.1`. DNS queries are documented separately from local port scanning.
+
+### Tools
+
+* Kali Linux terminal
+* `ip`
+* `ss`
+* `nslookup` or `dig`
+* Nmap
+* Wireshark, if available
+
+### Observed results
+
+Record each command and its actual output. Previously observed facts can be cited as historical observations, but new scan and capture results must be recorded only after the corresponding command or tool has been used.
+
+### Findings and limitations
+
+Do not claim a vulnerability merely because a service is listening. Do not treat DNS results as permanent. Explain which results were observed directly and which remain unconfirmed.
+
+### Conclusion
+
+Complete this section after the practical exercises have been run. Summarize the commands used, the evidence collected, and any remaining questions.
+
+---
+
+# Module 2 — Overall Review.
+
+## Important commands
+
+```bash
+pwd
+whoami
+ls -l /etc/passwd
+id
+groups
+ps aux | head
+sudo systemctl status wazuh-agent --no-pager
+nslookup google.com
+dig google.com A
+dig google.com AAAA
+dig google.com MX
+dig google.com NS
+dig google.com TXT
+nmap --version
+nmap 127.0.0.1
+nmap -p 5432,11434 127.0.0.1
+sudo ss -tulpn
+ip addr
+cat /etc/os-release
+```
+
+## Key lessons
+
+1. Linux file permissions determine which users can read, modify, or execute files.
+2. Running processes and services should be interpreted in context.
+3. DNS provides different record types for different purposes.
+4. Nmap reports port states; an open port alone does not establish a vulnerability.
+5. Wireshark helps analyze network packets, while Burp Suite and ZAP help inspect web traffic.
+6. Captured traffic may contain sensitive information and should be handled carefully.
+7. Security testing must stay within an authorized scope.
+8. Lab reports should distinguish actual output from interpretation and assumptions.
+
+## Final status
+
+**Module 2 — Days 6–10: Learning material and practical commands documented.**
+
+Some Linux observations are already recorded from earlier exercises. DNS record queries, Nmap scans, packet captures, and web proxy testing still require actual execution before their results can be marked completed.
+
